@@ -8,9 +8,12 @@ function onServerCall(sSource, aoData, fnCallback)
         data:aoData,
         success:function(resp) {
             try {
-                resp = resp.match(/JSON_DATA\>(.*)\<\/JSON_DATA/)[1];
+            	resp = resp.replace(/[\r\n\s]/g,' ');
+            	resp = resp.match(/JSON_DATA\>(.*)\<\/JSON_DATA/)[1];
+//            	alert("resp: "+resp);
                 json = eval("(" + resp + ")");
-            } catch(e) {}
+//            	alert("json: "+json);
+            } catch(e) { alert("error occured during eval: " + e.message); }
 
             fnCallback(json);
         }

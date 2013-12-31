@@ -52,7 +52,7 @@ var index_page = {
 
         that.browse_contacts_table = $('#browse_contacts table.datatable').tw_table(
             // {{{
-            base_url + 'p/addressbook?op=contacts/get',
+            base_url + 'p/addressbook?op=contacts-get',
             { limit:10, onServerData:onServerCall, sort_by:[[1, 'asc']], pagination_type:'full_numbers' },
             {
                 bAutoWidth: true,
@@ -132,7 +132,7 @@ var index_page = {
 
         that.recent_contacts_table = $('#recent_contacts table.datatable').tw_table(
             // {{{
-            base_url + 'p/addressbook?op=contacts/get',
+            base_url + 'p/addressbook?op=contacts-get',
             { limit:5, onServerData:onServerCall, sort_by:[[0, 'desc']] },
             {
                 aoColumns: [
@@ -178,7 +178,7 @@ var index_page = {
 
         that.groups_table = $('#list_of_groups table.datatable').tw_table(
             // {{{
-            base_url + 'p/addressbook?op=groups/get',
+            base_url + 'p/addressbook?op=groups-get',
             { onServerData:onServerCall },
             {
                 aoColumns: [
@@ -202,7 +202,7 @@ var index_page = {
 
         that.tags_table = $('#list_of_tags table.datatable').tw_table(
             // {{{
-            base_url + 'p/addressbook?op=tags/get',
+            base_url + 'p/addressbook?op=tags-get',
             { onServerData:onServerCall  },
             {
                 aoColumns: [
@@ -228,7 +228,7 @@ var index_page = {
 
     call_number: function(phone) 
     { // {{{
-        var callerid = $('select[name="from"] option').get(0).value;
+        var callerid = $("input[name='from']").get(0).value; // $('select[name="from"] option').get(0).value; // $("#caller-id-phone-number option:first-child").get(0).value;
 
         $.post(
             base_url + '/messages/call', 
@@ -237,14 +237,14 @@ var index_page = {
                 to:phone,
                 target:base_url+'messages/call'
             },
-            function(resp) { },
+            function(resp, state) { },
             'text'
         );
     }, // }}}
 
     send_msg: function(phone, msg) 
     { // {{{
-        var callerid = $('select[name="from"] option').get(0).value;
+        var callerid = $("input[name='from']").get(0).value; // $('select[name="from"] option').get(0).value;
 
         $.post(
             base_url + '/messages/sms', 
@@ -265,7 +265,7 @@ var index_page = {
         var id = tr.find('input[name="id"]').val();
 
         $.post(
-            base_url + 'p/addressbook?op=contact/del',
+            base_url + 'p/addressbook?op=contact-del',
             { 'id':id },
             function(resp) {
                 try {
@@ -327,7 +327,7 @@ var index_page = {
 
         if(errors.length == 0) {
             $.post(
-                base_url + 'p/addressbook?op=contacts/import',
+                base_url + 'p/addressbook?op=contacts-import',
                 { password:password.val(), email:email.val(), source:source.val() },
                 function(resp) {
                     resp = resp.match(/JSON_DATA\>(.*)\<\/JSON_DATA/)[1];
@@ -369,7 +369,7 @@ var index_page = {
 
         if(errors.length == 0) {
             $.post(
-                base_url + 'p/addressbook?op=contacts/new',
+                base_url + 'p/addressbook?op=contacts-new',
                 { name:name, title:title, company:company, phone:phone, email:email },
                 function(resp) {
                     try {
@@ -400,7 +400,7 @@ var index_page = {
         that.contact_inactive(tr);
 
         $.post(
-            base_url + 'p/addressbook?op=contact/update',
+            base_url + 'p/addressbook?op=contact-update',
             form_inputs.serialize(),
             function(resp) {
                 try {
@@ -441,7 +441,7 @@ var index_page = {
                 // Contact events
                 $('#browse_contacts tbody tr[class!="new_contact_form"]').live('click', function(e) {
                     var target = $(e.target);
-                    var from = $('div.call-dialog select[name="callerid"] option')[0].value;
+//                    var from = $('div#callerid-container select[name="browserphone_caller_id"] option').value;
 
                     // Save button
                     if(target.hasClass('save_btn')) {

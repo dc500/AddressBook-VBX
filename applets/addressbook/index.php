@@ -1,4 +1,5 @@
 <?php
+
 $CI =& get_instance();
 $plugin = OpenVBX::$currentPlugin;
 $plugin = $plugin->getInfo();
@@ -118,7 +119,7 @@ function get_data($table, $R=NULL)
     return $results;
 } // }}}
 
-if($op == 'contacts/del' || $op == 'contact/del')
+if($op == 'contacts-del' || $op == 'contact-del')
 { // {{{
     try {
         $contact_id = $_REQUEST['id'];
@@ -150,12 +151,12 @@ if($op == 'contacts/del' || $op == 'contact/del')
     }
 } // }}}
 
-else if($op == 'contacts/get' || $op == 'contact/get')
+else if($op == 'contacts-get' || $op == 'contact-get')
 { // {{{
     $results = get_data('addressbook_contacts');
 } // }}}
 
-else if($op == 'contacts/import' || $op == 'contact/import') 
+else if($op == 'contacts-import' || $op == 'contact-import') 
 { // {{{
     try {
         $source = @$_REQUEST['source'];
@@ -310,7 +311,7 @@ else if($op == 'contacts/import' || $op == 'contact/import')
     }
 } // }}}
 
-else if($op == 'contacts/new' || $op =='contact/new') 
+else if($op == 'contacts-new' || $op =='contact-new') 
 { // {{{
     try {
         $name = @$_REQUEST['name'];
@@ -363,7 +364,7 @@ else if($op == 'contacts/new' || $op =='contact/new')
     }
 } // }}}
 
-else if($op == 'contacts/update' || $op == 'contact/update')
+else if($op == 'contacts-update' || $op == 'contact-update')
 { // {{{
     try {
         $contact_id = $_REQUEST['id'];
@@ -418,37 +419,37 @@ else if($op == 'contacts/update' || $op == 'contact/update')
     }
 } // }}}
 
-else if($op == 'groups/del' || $op == 'group/del')
+else if($op == 'groups-del' || $op == 'group-del')
 {
 }
 
-else if($op == 'groups/get' || $op == 'group/get')
+else if($op == 'groups-get' || $op == 'group-get')
 { // {{{
     $results = get_data('addressbook_groups');
 } // }}}
 
-else if($op == 'groups/new' || $op == 'group/new') 
+else if($op == 'groups-new' || $op == 'group-new') 
 {
 }
 
-else if($op == 'groups/update' || $op == 'group/update') 
+else if($op == 'groups-update' || $op == 'group-update') 
 {
 }
 
-else if($op == 'tags/del' || $op == 'tag/del')
+else if($op == 'tags-del' || $op == 'tag-del')
 {
 }
 
-else if($op == 'tags/get' || $op == 'tag/get')
+else if($op == 'tags-get' || $op == 'tag-get')
 { // {{{
     $results = get_data('addressbook_tags');
 } // }}}
 
-else if($op == 'tags/new' || $op == 'tag/new')
+else if($op == 'tags-new' || $op == 'tag-new')
 {
 }
 
-else if($op == 'tags/update' || $op == 'tag/update')
+else if($op == 'tags-update' || $op == 'tag-update')
 {
 }
 ?>
