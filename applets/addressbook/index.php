@@ -374,8 +374,13 @@ else if($op == 'contacts-update' || $op == 'contact-update')
         $phone = @$_REQUEST['phone'];
         $email = @$_REQUEST['email'];
 
-        $first_name = trim(substr($name, 0, strrpos($name, ' '))); 
-        $last_name = trim(substr($name, strrpos($name, ' ') + 1)); 
+        $first_name = $name;
+        $last_name = '';
+        
+        if(strpos($name, ' ') !== false) {
+        	$first_name = trim(substr($name, 0, strrpos($name, ' ')));
+        	$last_name = trim(substr($name, strrpos($name, ' ') + 1));      
+        }
 
         $update_contact = array(
             'first_name' => $first_name,
@@ -483,7 +488,7 @@ div.dataTables_length { float:left; }
 div.dataTables_filter { text-align:right; }
 
 input[type="button"].edit_inactive { visibility:hidden; }
-input[type="button"].edit_active { visibility:visible; }}
+input[type="button"].edit_active { visibility:visible; }
 input[type="text"].edit_active { border:0px; margin:0px; margin-bottom:2px; padding:1px; }
 input[type="text"].edit_inactive { background-color:inherit; border:0px; margin:0px; margin-bottom:2px; padding:1px; }
 
