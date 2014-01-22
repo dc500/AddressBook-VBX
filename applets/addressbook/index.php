@@ -320,8 +320,15 @@ else if($op == 'contacts-new' || $op =='contact-new')
         $phone = @$_REQUEST['phone'];
         $email = @$_REQUEST['email'];
 
-        $first_name = trim(substr($name, 0, strrpos($name, ' '))); 
-        $last_name = trim(substr($name, strrpos($name, ' ') + 1)); 
+	if(!empty($name)) {
+		$space = strrpos($name, ' ');
+		if($space === FALSE) {
+			$first_name = trim($name);
+		} else {
+			$first_name = trim(substr($name, 0, $space));
+			$last_name  = trim(substr($name, $space + 1));
+		}
+	}
 
         $new_contact = array(
             'first_name' => $first_name,
@@ -374,13 +381,15 @@ else if($op == 'contacts-update' || $op == 'contact-update')
         $phone = @$_REQUEST['phone'];
         $email = @$_REQUEST['email'];
 
-        $first_name = $name;
-        $last_name = '';
-        
-        if(strpos($name, ' ') !== false) {
-        	$first_name = trim(substr($name, 0, strrpos($name, ' ')));
-        	$last_name = trim(substr($name, strrpos($name, ' ') + 1));      
-        }
+	if(!empty($name)) {
+		$space = strrpos($name, ' ');
+		if($space === FALSE) {
+			$first_name = trim($name);
+		} else {
+			$first_name = trim(substr($name, 0, $space));
+			$last_name  = trim(substr($name, $space + 1));
+		}
+	}
 
         $update_contact = array(
             'first_name' => $first_name,
@@ -735,7 +744,7 @@ ul.errors.li { margin:2px; }
 </div>
 
 <script>
-var base_url = '<?php echo base_url() ?>';
+var base_url = '<?php echo tenant_url('/').'/' ?>';
 var plugin_url = '<?php echo $plugin_url ?>';
 var user_numbers = <?php echo json_encode($user_numbers) ?>;
 </script>
