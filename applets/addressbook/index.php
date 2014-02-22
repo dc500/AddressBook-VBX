@@ -118,8 +118,8 @@ function get_data($table, $R=NULL)
         $rows[] = $parsed_row;
     }
 
-    error_log(json_encode($fields));
-    error_log(json_encode($rows));
+//    error_log(json_encode($fields));
+//    error_log(json_encode($rows));
 
     $results = array(
         'sEcho'=>intval(@$R['sEcho']),
