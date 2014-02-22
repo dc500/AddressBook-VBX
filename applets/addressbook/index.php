@@ -77,7 +77,6 @@ function get_data($table, $R=NULL)
 	$CI->db->stop_cache();
 
     $total = $CI->db->count_all_results($table);
-    print("query: ".$CI->db->last_query()."<br>");
 
     // Order
     if($table == 'addressbook_contacts') {
@@ -97,7 +96,6 @@ function get_data($table, $R=NULL)
     }
 
     $res = $CI->db->get($table);
-    print("query: ".$CI->db->last_query()."<br>");
     $rows = array();
     foreach($res->result_array() as $row) {
         $parsed_row = array();
@@ -414,7 +412,7 @@ else if($op == 'contacts-update' || $op == 'contact-update')
             'company' => $company,
             'phone' => preg_replace('/[^0-9+]+/', '', $phone),
             'email' => $email,
-            'updated' => date('Y-m-d H:i:s'),
+            'updated' => date('Y-m-d H:i:s')
         );
 
         if($CI->db->update('addressbook_contacts', $update_contact, array('id' => $contact_id, 'tenant_id' => $tenant_id))) {
