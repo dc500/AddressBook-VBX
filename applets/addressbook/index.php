@@ -7,6 +7,10 @@ $plugin_url = base_url().'plugins/'.$plugin['dir_name'];
 $op = @$_REQUEST['op'];
 $user_id = $CI->session->userdata('user_id');
 
+// get tenant_id
+$res = $CI->db->query('select tenant_id from users where id='.$user_id);
+$tenant_id = $res->row(0)->tenant_id;
+
 if(!function_exists('json_encode')) {
     include($plugin['plugin_path'].'/vendors/json.php');
 }
@@ -17,6 +21,11 @@ function get_data($table, $R=NULL)
     $plugin = OpenVBX::$currentPlugin;
     $plugin = $plugin->getInfo();
     $plugin_url = base_url().'plugins/'.$plugin['dir_name'];
+
+    // get tenant_id
+	$user_id = $CI->session->userdata('user_id');
+    $res = $CI->db->query('select tenant_id from users where id='.$user_id);
+    $tenant_id = $res->row(0)->tenant_id;
 
     if(empty($R)) $R = $_REQUEST;
 
@@ -62,8 +71,13 @@ function get_data($table, $R=NULL)
         }
     }
 
-    $CI->db->stop_cache();
+	if($table == 'addressbook_contacts')
+		$CI->db->where('tenant_id', $tenant_id);
+
+	$CI->db->stop_cache();
+
     $total = $CI->db->count_all_results($table);
+    print("query: ".$CI->db->last_query()."<br>");
 
     // Order
     if($table == 'addressbook_contacts') {
@@ -83,6 +97,7 @@ function get_data($table, $R=NULL)
     }
 
     $res = $CI->db->get($table);
+    print("query: ".$CI->db->last_query()."<br>");
     $rows = array();
     foreach($res->result_array() as $row) {
         $parsed_row = array();
@@ -124,7 +139,7 @@ if($op == 'contacts-del' || $op == 'contact-del')
     try {
         $contact_id = $_REQUEST['id'];
 
-        if($CI->db->delete('addressbook_contacts', array('id' => $contact_id))) {
+        if($CI->db->delete('addressbook_contacts', array('id' => $contact_id, 'tenant_id' => $tenant_id))) {
             throw new Exception('SUCCESS');
         }
 
@@ -241,7 +256,7 @@ else if($op == 'contacts-import' || $op == 'contact-import')
             if($ch_info['http_code'] == 200) {
                 $results = json_decode($results);
                 foreach($results->feed->entry as $contact) {
-                    $new_contact = array();
+                    $new_contact = array('tenant_id' => $tenant_id);
 
                     $name = $contact->title->{'$t'};
                     if(!empty($name)) {
@@ -261,7 +276,7 @@ else if($op == 'contacts-import' || $op == 'contact-import')
                     if(!empty($email)) $new_contact['email'] = $email;
 
                     $new_contact = (array) $new_contact;
-                    $chk_contact = $CI->db->get_where('addressbook_contacts', array('email' => $new_contact['email']))->row();
+                    $chk_contact = $CI->db->get_where('addressbook_contacts', array('email' => $new_contact['email'], 'tenant_id' => $tenant_id))->row();
                     if(!empty($chk_contact)) {
                         $new_contact['updated'] = gmdate('Y-m-d H:i:s');
                         $CI->db->update('addressbook_contacts', $new_contact, array('id' => $chk_contact->id));
@@ -339,7 +354,8 @@ else if($op == 'contacts-new' || $op =='contact-new')
             'email' => $email,
             'created' => date('Y-m-d H:i:s'),
             'updated' => date('Y-m-d H:i:s'),
-            'user_id' => $user_id
+            'user_id' => $user_id,
+        	'tenant_id' => $tenant_id
         );
 
         if($CI->db->insert('addressbook_contacts', $new_contact)) {
@@ -398,10 +414,10 @@ else if($op == 'contacts-update' || $op == 'contact-update')
             'company' => $company,
             'phone' => preg_replace('/[^0-9+]+/', '', $phone),
             'email' => $email,
-            'updated' => date('Y-m-d H:i:s')
+            'updated' => date('Y-m-d H:i:s'),
         );
 
-        if($CI->db->update('addressbook_contacts', $update_contact, array('id' => $contact_id))) {
+        if($CI->db->update('addressbook_contacts', $update_contact, array('id' => $contact_id, 'tenant_id' => $tenant_id))) {
             throw new Exception('SUCCESS');
         } else {
             throw new Exception('DB_ERROR');
