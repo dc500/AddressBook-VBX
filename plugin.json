@@ -4,7 +4,7 @@
     "description": "Stores a list of contacts so you can call and text them.",
     "links": [
         {
-            "menu": "plugins",
+            "menu": "Contacts",
             "url": "addressbook",
             "script": "applets/addressbook/index.php",
             "label": "Address Book"

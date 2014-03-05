@@ -1,10 +1,15 @@
 <?php
+
 $CI =& get_instance();
 $plugin = OpenVBX::$currentPlugin;
 $plugin = $plugin->getInfo();
 $plugin_url = base_url().'plugins/'.$plugin['dir_name'];
 $op = @$_REQUEST['op'];
 $user_id = $CI->session->userdata('user_id');
+
+// get tenant_id
+$res = $CI->db->query('select tenant_id from users where id='.$user_id);
+$tenant_id = $res->row(0)->tenant_id;
 
 if(!function_exists('json_encode')) {
     include($plugin['plugin_path'].'/vendors/json.php');
@@ -16,6 +21,11 @@ function get_data($table, $R=NULL)
     $plugin = OpenVBX::$currentPlugin;
     $plugin = $plugin->getInfo();
     $plugin_url = base_url().'plugins/'.$plugin['dir_name'];
+
+    // get tenant_id
+	$user_id = $CI->session->userdata('user_id');
+    $res = $CI->db->query('select tenant_id from users where id='.$user_id);
+    $tenant_id = $res->row(0)->tenant_id;
 
     if(empty($R)) $R = $_REQUEST;
 
@@ -61,7 +71,11 @@ function get_data($table, $R=NULL)
         }
     }
 
-    $CI->db->stop_cache();
+	if($table == 'addressbook_contacts')
+		$CI->db->where('tenant_id', $tenant_id);
+
+	$CI->db->stop_cache();
+
     $total = $CI->db->count_all_results($table);
 
     // Order
@@ -104,8 +118,8 @@ function get_data($table, $R=NULL)
         $rows[] = $parsed_row;
     }
 
-    error_log(json_encode($fields));
-    error_log(json_encode($rows));
+//    error_log(json_encode($fields));
+//    error_log(json_encode($rows));
 
     $results = array(
         'sEcho'=>intval(@$R['sEcho']),
@@ -118,12 +132,12 @@ function get_data($table, $R=NULL)
     return $results;
 } // }}}
 
-if($op == 'contacts/del' || $op == 'contact/del')
+if($op == 'contacts-del' || $op == 'contact-del')
 { // {{{
     try {
         $contact_id = $_REQUEST['id'];
 
-        if($CI->db->delete('addressbook_contacts', array('id' => $contact_id))) {
+        if($CI->db->delete('addressbook_contacts', array('id' => $contact_id, 'tenant_id' => $tenant_id))) {
             throw new Exception('SUCCESS');
         }
 
@@ -150,12 +164,12 @@ if($op == 'contacts/del' || $op == 'contact/del')
     }
 } // }}}
 
-else if($op == 'contacts/get' || $op == 'contact/get')
+else if($op == 'contacts-get' || $op == 'contact-get')
 { // {{{
     $results = get_data('addressbook_contacts');
 } // }}}
 
-else if($op == 'contacts/import' || $op == 'contact/import') 
+else if($op == 'contacts-import' || $op == 'contact-import') 
 { // {{{
     try {
         $source = @$_REQUEST['source'];
@@ -240,7 +254,7 @@ else if($op == 'contacts/import' || $op == 'contact/import')
             if($ch_info['http_code'] == 200) {
                 $results = json_decode($results);
                 foreach($results->feed->entry as $contact) {
-                    $new_contact = array();
+                    $new_contact = array('tenant_id' => $tenant_id);
 
                     $name = $contact->title->{'$t'};
                     if(!empty($name)) {
@@ -260,7 +274,7 @@ else if($op == 'contacts/import' || $op == 'contact/import')
                     if(!empty($email)) $new_contact['email'] = $email;
 
                     $new_contact = (array) $new_contact;
-                    $chk_contact = $CI->db->get_where('addressbook_contacts', array('email' => $new_contact['email']))->row();
+                    $chk_contact = $CI->db->get_where('addressbook_contacts', array('email' => $new_contact['email'], 'tenant_id' => $tenant_id))->row();
                     if(!empty($chk_contact)) {
                         $new_contact['updated'] = gmdate('Y-m-d H:i:s');
                         $CI->db->update('addressbook_contacts', $new_contact, array('id' => $chk_contact->id));
@@ -310,7 +324,7 @@ else if($op == 'contacts/import' || $op == 'contact/import')
     }
 } // }}}
 
-else if($op == 'contacts/new' || $op =='contact/new') 
+else if($op == 'contacts-new' || $op =='contact-new') 
 { // {{{
     try {
         $name = @$_REQUEST['name'];
@@ -319,8 +333,15 @@ else if($op == 'contacts/new' || $op =='contact/new')
         $phone = @$_REQUEST['phone'];
         $email = @$_REQUEST['email'];
 
-        $first_name = trim(substr($name, 0, strrpos($name, ' '))); 
-        $last_name = trim(substr($name, strrpos($name, ' ') + 1)); 
+	if(!empty($name)) {
+		$space = strrpos($name, ' ');
+		if($space === FALSE) {
+			$first_name = trim($name);
+		} else {
+			$first_name = trim(substr($name, 0, $space));
+			$last_name  = trim(substr($name, $space + 1));
+		}
+	}
 
         $new_contact = array(
             'first_name' => $first_name,
@@ -331,7 +352,8 @@ else if($op == 'contacts/new' || $op =='contact/new')
             'email' => $email,
             'created' => date('Y-m-d H:i:s'),
             'updated' => date('Y-m-d H:i:s'),
-            'user_id' => $user_id
+            'user_id' => $user_id,
+        	'tenant_id' => $tenant_id
         );
 
         if($CI->db->insert('addressbook_contacts', $new_contact)) {
@@ -363,7 +385,7 @@ else if($op == 'contacts/new' || $op =='contact/new')
     }
 } // }}}
 
-else if($op == 'contacts/update' || $op == 'contact/update')
+else if($op == 'contacts-update' || $op == 'contact-update')
 { // {{{
     try {
         $contact_id = $_REQUEST['id'];
@@ -373,8 +395,15 @@ else if($op == 'contacts/update' || $op == 'contact/update')
         $phone = @$_REQUEST['phone'];
         $email = @$_REQUEST['email'];
 
-        $first_name = trim(substr($name, 0, strrpos($name, ' '))); 
-        $last_name = trim(substr($name, strrpos($name, ' ') + 1)); 
+	if(!empty($name)) {
+		$space = strrpos($name, ' ');
+		if($space === FALSE) {
+			$first_name = trim($name);
+		} else {
+			$first_name = trim(substr($name, 0, $space));
+			$last_name  = trim(substr($name, $space + 1));
+		}
+	}
 
         $update_contact = array(
             'first_name' => $first_name,
@@ -386,7 +415,7 @@ else if($op == 'contacts/update' || $op == 'contact/update')
             'updated' => date('Y-m-d H:i:s')
         );
 
-        if($CI->db->update('addressbook_contacts', $update_contact, array('id' => $contact_id))) {
+        if($CI->db->update('addressbook_contacts', $update_contact, array('id' => $contact_id, 'tenant_id' => $tenant_id))) {
             throw new Exception('SUCCESS');
         } else {
             throw new Exception('DB_ERROR');
@@ -418,37 +447,37 @@ else if($op == 'contacts/update' || $op == 'contact/update')
     }
 } // }}}
 
-else if($op == 'groups/del' || $op == 'group/del')
+else if($op == 'groups-del' || $op == 'group-del')
 {
 }
 
-else if($op == 'groups/get' || $op == 'group/get')
+else if($op == 'groups-get' || $op == 'group-get')
 { // {{{
     $results = get_data('addressbook_groups');
 } // }}}
 
-else if($op == 'groups/new' || $op == 'group/new') 
+else if($op == 'groups-new' || $op == 'group-new') 
 {
 }
 
-else if($op == 'groups/update' || $op == 'group/update') 
+else if($op == 'groups-update' || $op == 'group-update') 
 {
 }
 
-else if($op == 'tags/del' || $op == 'tag/del')
+else if($op == 'tags-del' || $op == 'tag-del')
 {
 }
 
-else if($op == 'tags/get' || $op == 'tag/get')
+else if($op == 'tags-get' || $op == 'tag-get')
 { // {{{
     $results = get_data('addressbook_tags');
 } // }}}
 
-else if($op == 'tags/new' || $op == 'tag/new')
+else if($op == 'tags-new' || $op == 'tag-new')
 {
 }
 
-else if($op == 'tags/update' || $op == 'tag/update')
+else if($op == 'tags-update' || $op == 'tag-update')
 {
 }
 ?>
@@ -482,7 +511,7 @@ div.dataTables_length { float:left; }
 div.dataTables_filter { text-align:right; }
 
 input[type="button"].edit_inactive { visibility:hidden; }
-input[type="button"].edit_active { visibility:visible; }}
+input[type="button"].edit_active { visibility:visible; }
 input[type="text"].edit_active { border:0px; margin:0px; margin-bottom:2px; padding:1px; }
 input[type="text"].edit_inactive { background-color:inherit; border:0px; margin:0px; margin-bottom:2px; padding:1px; }
 
@@ -729,7 +758,7 @@ ul.errors.li { margin:2px; }
 </div>
 
 <script>
-var base_url = '<?php echo base_url() ?>';
+var base_url = '<?php echo tenant_url('/').'/' ?>';
 var plugin_url = '<?php echo $plugin_url ?>';
 var user_numbers = <?php echo json_encode($user_numbers) ?>;
 </script>

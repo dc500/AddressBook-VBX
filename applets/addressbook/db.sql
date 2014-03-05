@@ -20,6 +20,7 @@ CREATE TABLE IF NOT EXISTS `addressbook_contacts` (
 `created` datetime DEFAULT NULL,
 `updated` datetime DEFAULT NULL,
 `user_id` int(11) DEFAULT NULL,
+`tenant_id` bigint(20) DEFAULT NULL,
 PRIMARY KEY (`id`),
 FULLTEXT KEY `GENERAL_SEARCH` (`first_name`,`last_name`,`email`,`phone`,`company`,`title`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
